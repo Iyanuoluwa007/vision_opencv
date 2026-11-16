@@ -1,0 +1,29 @@
+name: fork-check
+on:
+  push:
+    branches: ["ci/**"]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    container: ros:rolling
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/vision_opencv
+      - name: Install deps
+        shell: bash
+        run: |
+          apt-get update
+          rosdep update --rosdistro rolling
+          rosdep install --from-paths src --ignore-src -y --rosdistro rolling
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/rolling/setup.bash
+          colcon build --packages-select cv_bridge image_geometry --event-handlers console_direct+
+      - name: Test
+        shell: bash
+        run: |
+          source install/setup.bash
+          colcon test --packages-select cv_bridge image_geometry --event-handlers console_direct+ || true
+          colcon test-result --verbose
