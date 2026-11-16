@@ -145,7 +145,7 @@ class PinholeCameraModel:
         else:
             return (float('nan'), float('nan'))
 
-    def project_pixel_to_3d_ray(self, uv) -> tuple[float, float, float]:
+    def project_pixel_to_3d_ray(self, uv, *, normalize=True) -> tuple[float, float, float]:
         """
         Return the unit vector from the camera center through rectified pixel (u, v).
 
@@ -154,10 +154,16 @@ class PinholeCameraModel:
 
         :param uv:        rectified pixel coordinates
         :type uv:         (u, v)
+        :param normalize: if True (the default), return a unit vector. If False, return the
+                          point on the ray with z = 1.0, which matches the C++
+                          ``PinholeCameraModel::projectPixelTo3dRay()``.
+        :type normalize:  bool
         :rtype:           tuple[float,float,float]
         """
         x = (uv[0] - self.cx()) / self.fx()
         y = (uv[1] - self.cy()) / self.fy()
+        if not normalize:
+            return (x, y, 1.0)
         norm = math.sqrt(x*x + y*y + 1)
         x /= norm
         y /= norm
